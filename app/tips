@@ -1,0 +1,147 @@
+
+角度(angle)是60进制，弧度(radian)是10进制
+rad = deg x π / 180  2π ＝ 360 x π / 180
+在默认的屏幕坐标系中角度增大方向为顺时针
+
+RGB565	屏幕默认模式(16位)
+
+#f00       //低精度 - 不带透明通道红色
+#af00     //低精度 - 带透明通道红色
+
+#ff0000       //高精度 - 不带透明通道红色
+#aaff0000    //高精度 - 带透明通道红色
+
+
+UNSPECIFIED  默认值，父控件没有给子view任何限制，子View可以设置为任意大小。
+EXACTLY      表示父控件已经确切的指定了子View的大小
+AT_MOST      表示子View具体大小没有尺寸限制，但是存在上限，上限一般为父View大小
+
+
+drawPicture    Canvas操作的录像机
+
+Paint.setStrokeCap(cap) 可以设置点的形状
+
+Path.Direction dir CW(顺时针) CWW(逆时针) 记录点的顺序
+
+Path.setFillType(Path.FillType ft) 设置填充方式
+
+Paint.setShader()  着色方案
+
+       LinearGradient 线性渐变：设置两个点和两种颜色，以这两个点作为端点，使用两种颜色的渐变来绘制颜色
+       RadialGradient 辐射渐变：从中心向周围辐射状的渐变
+       SweepGradient 扫描渐变：
+       BitmapShader：
+       ComposeShader 混合着色器：两个 Shader 一起使用
+
+
+Paint.setColorFilter(ColorFilter filter)
+
+      LightingColorFilter 是用来模拟简单的光照效果的
+      PorterDuffColorFilter
+      ColorMatrixColorFilter
+
+canvas.drawText()   与文字左下角比较接近的位置
+StaticLayout 绘制多行文字(自动 \n 换行)
+
+
+canvas 辅助方法是倒序的(注意顺序)
+
+二维变换：
+        canvas.save();
+        canvas.translate(200, 0);
+        canvas.drawBitmap(bitmap, x, y, paint);
+        canvas.restore();
+        (不影响下面的绘制)
+
+    调用 Matrix 的 pre/postTranslate/Rotate/Scale/Skew() 方法来设置几何变换；
+    使用 Canvas.setMatrix(matrix) 或 Canvas.concat(matrix) 来把几何变换应用到 Canvas。
+       1. Matrix matrix = new Matrix();
+          matrix.reset();
+       2. matrix.postTranslate();
+          matrix.postRotate();
+          canvas.save();
+       3. canvas.concat(matrix);(尽量使用)
+          canvas.drawBitmap(bitmap, x, y, paint);
+          canvas.restore();
+
+camera 三维坐标系 x:右正左负  y:上正下负 z:内正外负(垂直view)
+camera向view进行投影
+setLocation移动相机投影距离
+
+canvas.save();
+camera.rotateX(30); // 旋转 Camera 的三维空间
+camera.applyToCanvas(canvas); // 把旋转投影到 Canvas
+canvas.drawBitmap(bitmap, point1.x, point1.y, paint);
+canvas.restore();
+
+
+范围裁切：
+        canvas.save();
+        canvas.clipRect(left, top, right, bottom);
+        canvas.drawBitmap(bitmap, x, y, paint);
+        canvas.restore();
+
+
+绘制顺序：继承已有控件 注意绘制顺序
+        写在 super.onDraw() 的下面 覆盖原有内容
+        写在 super.onDraw() 的上面 被原内容覆盖
+
+        dispatchDraw() 绘制子view
+
+动画：
+     ViewPropertyAnimator
+     ObjectAnimator
+     如果是自定义属性 需要添加getter/setter方法
+     Interpolator(插值器):
+                          AccelerateDecelerateInterpolator(先加速再减速--默认)
+                          LinearInterpolator(匀速)
+                          AccelerateInterpolator(持续加速)
+                          DecelerateInterpolator(持续减速到0)
+                          AnticipateInterpolator(先回拉一下再进行正常动画轨迹)
+                          OvershootInterpolator(动画会超过目标值一些，然后再弹回来)
+                          AnticipateOvershootInterpolator(开始前回拉，最后超过一些然后回弹)
+                          BounceInterpolator(在目标值处弹跳。有点像玻璃球掉在地板上的效果)
+                          FastOutLinearInInterpolator(加速运动)
+                          LinearOutSlowInInterpolator(持续减速)
+                          FastOutSlowInInterpolator(先加速再减速)
+                          CycleInterpolator(可以自定义曲线的周期，所以动画可以不到终点就结束，也可以到达终点后回弹，
+                          回弹的次数由曲线的(ex:0.5f))
+                          PathInterpolator(自定义动画完成度 / 时间完成度曲线---定义任何速度模型)
+
+     TypeEvaluator(估值器):
+     ValuesAnimator:
+                    做动画的属性却没有 setter / getter 方法的时候，会需要用到它
+                    给一个第三方控件做动画你需要更新的那个属性没有 setter 方法
+                    onUpdate() 里面更新这个属性的值，并且手动调用 invalidate()
+
+     硬件加速：
+              硬件加速专指把 View 中绘制的计算工作交给 GPU 来处理--把绘制方法中的那些 Canvas.drawXXX() 变成实际的像素
+
+
+布局过程：
+        一、(修改尺寸--已有控件)
+           1.测量--从上到下递归地调用每个 View 或者 ViewGroup 的 measure() 方法，测量他们的尺寸并计算它们的位置
+
+                View: View 在 onMeasure() 中会计算出自己的尺寸然后保存
+           ViewGroup: ViewGroup 在 onMeasure() 中会调用所有子 View 的 measure() 让它们进行自我测量，
+                  并根据子 View 计算出的期望尺寸来计算出它们的实际尺寸和位置然后保存。
+                  同时，它也会根据子 View 的尺寸和位置来计算出自己的尺寸然后保存；
+
+           2.布局--从上到下递归地调用每个 View 或者 ViewGroup 的 layout() 方法，把测得的它们的尺寸和位置赋值给它们
+
+                  View：由于没有子 View，所以 View 的 onLayout() 什么也不做。
+             ViewGroup：ViewGroup 在 onLayout() 中会调用自己的所有子 View 的 layout() 方法，
+                    把它们的尺寸和位置传给它们，让它们完成自我的内部布局
+
+         二、(全新定制尺寸)
+
+            不用调用 super.onMeasure自己计算
+            measuredHeight=resolveSize(measuredHeight,heightMeasureSpec);
+            measuredWidth=resolveSize(measuredWidth,widthMeasureSpec);
+
+            重新 onMeasure()，并计算出 View 的尺寸；
+            使用 resolveSize() 来让子 View 的计算结果符合父 View 的限制
+
+
+
+
